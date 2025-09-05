@@ -15,7 +15,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
 from config import get_data_paths, get_columns, get_missing_values_config, get_outlier_config, get_binning_config, get_encoding_config, get_scaling_config, get_splitting_config
 
 def data_pipeline(
-                    data_path: str='data/raw/ChurnModelling.csv', 
+                    data_path: str='../data/raw/ChurnModelling.csv', 
                     target_column: str='Exited', 
                     test_size: float=0.2, 
                     force_rebuild: bool=False
