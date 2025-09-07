@@ -23,15 +23,19 @@ class NominalEncodingStrategy(FeatureEncodingStrategy):
     def __init__(self, nominal_columns):
         self.nominal_columns = nominal_columns
         self.encoder_dicts = {}
-        os.makedirs('artifacts/encode', exist_ok=True)
+        # Get the project root directory (two levels up from src/)
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        encode_dir = os.path.join(project_root, 'artifacts', 'encode')
+        os.makedirs(encode_dir, exist_ok=True)
 
     def encode(self,df):
+        project_root = os.path.dirname(os.path.dirname(__file__))
         for column in self.nominal_columns:
             unique_values = df[column].unique()
             encoder_dict = {value: i for i, value in enumerate(unique_values)}
             self.encoder_dicts[column] = encoder_dict
 
-            encoder_path = os.path.join('artifacts/encode', f"{column}_encoder.json")
+            encoder_path = os.path.join(project_root, 'artifacts', 'encode', f"{column}_encoder.json")
             with open(encoder_path, "w") as f:
                 json.dump(encoder_dict, f)
 
