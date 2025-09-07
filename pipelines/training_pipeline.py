@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO, format=
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-def training_pipeline(  data_path: str='../data/raw/ChurnModelling.csv', model_params: Optional[Dict[str, Any]] = None,test_size: float=0.2, random_state : int=42,model_path: str = '../artifacts/models/random_forest_cv_model.joblib'):
+def training_pipeline(  data_path: str='../data/raw/ChurnModelling.csv', model_params: Optional[Dict[str, Any]] = None,test_size: float=0.2, random_state : int=42,model_path: str = '../artifacts/models/churn_analysis_model.joblib'):
 
     if (not os.path.exists('../'+get_data_paths()['data_artifacts_dir'] +'/X_train.csv')) or \
         (not os.path.exists('../'+get_data_paths()['data_artifacts_dir']+ '/Y_train.csv')) or \
@@ -27,7 +27,7 @@ def training_pipeline(  data_path: str='../data/raw/ChurnModelling.csv', model_p
         data_pipeline()
 
     else:
-        print("Loading..")
+        print("Loading Data..")
 
 
     X_train = pd.read_csv('../'+get_data_paths()['data_artifacts_dir'] +'/X_train.csv')
@@ -43,9 +43,11 @@ def training_pipeline(  data_path: str='../data/raw/ChurnModelling.csv', model_p
     model, score = trainer.train(model=model, X_train= X_train,y_train= Y_train.squeeze())
     # print(score)
 
+    trainer.save_model(model , model_path)
+
     evaluator = ModelEvaluator(model, 'XGboost')
 
-    evaluator.evaluate(X_test=X_test, Y_test= Y_test)
+    results = evaluator.evaluate(X_test=X_test, Y_test= Y_test)
 
 
 training_pipeline()
