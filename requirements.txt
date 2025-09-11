@@ -1,8 +1,11 @@
+
 # Core ML and Data Science Libraries
 pandas>=1.5.0
 numpy>=1.21.0
 scikit-learn>=1.1.0
 scipy>=1.9.0
+# Distributed Data Processing
+pyspark>=3.5.0
 
 # ML Pipeline (ZenML will be added back later)
 # zenml>=0.50.0
@@ -31,7 +34,7 @@ uvicorn>=0.20.0
 pydantic>=2.0.0,<2.11.2
 
 # Monitoring and Logging (MLflow will be added back later)
-# mlflow>=1.30.0
+mlflow>=1.30.0
 wandb>=0.15.0
 
 # Testing
