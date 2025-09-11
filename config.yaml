@@ -148,6 +148,19 @@ logging:
 environment:
   experiment_name: "churn_analysis"
 
+mlflow:
+  tracking_uri: "file:./mlruns"  # Local file-based tracking
+  experiment_name: "Bank Churn Analysis"
+  model_registry_name: "churn_prediction"
+  artifact_path: "model"
+  run_name_prefix: "churn_run"
+  tags:
+    project: "customer_churn_prediction"
+    team: "ml_engineering"
+    environment: "development"
+  autolog: true
+
+
 pipeline:
   data_pipeline_name: "data_processing_pipeline"
   training_pipeline_name: "model_training_pipeline"
