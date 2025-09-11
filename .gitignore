@@ -20,7 +20,6 @@ venv.bak/
 
 # ML/Data Science specific
 mlruns/
-artifacts/
 *.joblib
 *.pkl
 *.h5
@@ -28,12 +27,6 @@ artifacts/
 temp_*.csv
 *.log
 
-# Data files (optional - depends on your needs)
-data/raw/
-data/processed/
-*.csv
-*.parquet
-*.json
 
 # Jupyter Notebooks
 .ipynb_checkpoints/
