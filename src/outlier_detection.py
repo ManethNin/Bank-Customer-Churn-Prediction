@@ -99,7 +99,7 @@ class IQROutlierDetection(OutlierDetectionStrategy):
 
 
             ############### PYSPARK CODES ###########################
-            quantiles = df.approxQuantile(self.relevant_column, [0.25, 0.75], 0.01)
+            quantiles = df.approxQuantile(col, [0.25, 0.75], 0.01)
             Q1, Q3 = quantiles[0], quantiles[1]
             IQR = Q3 - Q1
 
@@ -270,4 +270,4 @@ class OutlierDetector:
             raise ValueError(f"Unknown outlier handling method: {method}")
         
         logger.info(f"{'='*60}\n")
-        return cleaned_df
+        return clean_df
