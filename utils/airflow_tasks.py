@@ -147,3 +147,42 @@ def validate_trained_model(model_path: str = 'artifacts/models') -> Dict[str, An
         'message': 'Model files found'
     }
 
+
+def trigger_training_if_needed(**context) -> Dict[str, Any]:
+    """
+    Check if model exists, and trigger training DAG if not.
+    
+    Returns:
+        Dict with action taken
+    """
+    try:
+        # Try to validate model
+        result = validate_trained_model()
+        logger.info("✅ Model exists and is valid")
+        return {
+            'status': 'model_exists',
+            'action': 'none',
+            'message': 'Model is ready for inference'
+        }
+    except FileNotFoundError as e:
+        logger.warning(f"⚠️ Model not found: {e}")
+        
+        # Trigger training DAG
+        from airflow.models import DagBag
+        from airflow.api.client.local_client import Client
+        
+        try:
+            client = Client(None, None)
+            client.trigger_dag('training_pipeline_dag')
+            logger.info("🚀 Triggered training_pipeline_dag")
+            
+            return {
+                'status': 'model_missing',
+                'action': 'triggered_training',
+                'message': 'Training DAG triggered due to missing model'
+            }
+        except Exception as trigger_error:
+            logger.error(f"❌ Failed to trigger training DAG: {trigger_error}")
+            raise RuntimeError(f"Model missing and failed to trigger training: {trigger_error}")
+
+
