@@ -61,3 +61,47 @@ def validate_input_data(data_path: str = 'data/raw/ChurnModelling.csv') -> Dict[
         'message': 'Input data file exists and has content'
     }
 
+
+def validate_processed_data(data_path: str = 'data/processed/imputed.csv') -> Dict[str, Any]:
+    """
+    Lightweight validation that processed data exists.
+    
+    Args:
+        data_path: Path to processed data file
+        
+    Returns:
+        Dict with validation results
+    """
+    project_root = setup_project_environment()
+    full_path = Path(project_root) / data_path
+    
+    logger.info(f"Validating processed data at: {full_path}")
+    
+    if not full_path.exists():
+        logger.warning(f"Processed data file not found: {full_path}")
+        return {
+            'status': 'warning',
+            'message': 'Processed data file not found. Run data pipeline first.',
+            'file_path': str(full_path)
+        }
+    
+    file_size = full_path.stat().st_size
+    if file_size == 0:
+        logger.warning(f"Processed data file is empty: {full_path}")
+        return {
+            'status': 'warning',
+            'message': 'Processed data file is empty',
+            'file_path': str(full_path)
+        }
+    
+    logger.info(f"✅ Processed data validation passed: {file_size} bytes")
+    
+    return {
+        'status': 'success',
+        'file_path': str(full_path),
+        'file_size_bytes': file_size,
+        'message': 'Processed data file exists and has content'
+    }
+
+
+
