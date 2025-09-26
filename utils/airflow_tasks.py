@@ -186,3 +186,32 @@ def trigger_training_if_needed(**context) -> Dict[str, Any]:
             raise RuntimeError(f"Model missing and failed to trigger training: {trigger_error}")
 
 
+def setup_project_environment() -> str:
+    """
+    Setup project environment and return PROJECT_ROOT.
+    
+    Returns:
+        str: Absolute path to project root
+    """
+    # Get project root (works from any location)
+    current_file = Path(__file__).resolve()
+    project_root = current_file.parent.parent
+    
+    # Add project paths to Python path
+    paths_to_add = [
+        str(project_root),
+        str(project_root / 'src'),
+        str(project_root / 'utils'),
+        str(project_root / 'pipelines')
+    ]
+    
+    for path in paths_to_add:
+        if path not in sys.path:
+            sys.path.insert(0, path)
+    
+    # Set environment variables
+    os.environ['PYTHONPATH'] = ':'.join(paths_to_add)
+    
+    return str(project_root)
+
+
