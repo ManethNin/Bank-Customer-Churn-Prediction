@@ -104,4 +104,46 @@ def validate_processed_data(data_path: str = 'data/processed/imputed.csv') -> Di
     }
 
 
+def validate_trained_model(model_path: str = 'artifacts/models') -> Dict[str, Any]:
+    """
+    Lightweight validation that trained model exists.
+    
+    Args:
+        model_path: Path to model artifacts directory
+        
+    Returns:
+        Dict with validation results
+    """
+    project_root = setup_project_environment()
+    model_dir = Path(project_root) / model_path
+    
+    logger.info(f"Validating trained model at: {model_dir}")
+    
+    if not model_dir.exists():
+        logger.warning(f"Model directory not found: {model_dir}")
+        return {
+            'status': 'warning',
+            'message': 'Model directory not found. Run training pipeline first.',
+            'model_directory': str(model_dir)
+        }
+    
+    # Check for any model files
+    model_files = list(model_dir.glob('**/*'))
+    
+    if not model_files:
+        logger.warning(f"No model files found in: {model_dir}")
+        return {
+            'status': 'warning',
+            'message': 'No model files found. Run training pipeline first.',
+            'model_directory': str(model_dir)
+        }
+    
+    logger.info(f"✅ Model validation passed: {len(model_files)} file(s) found")
+    
+    return {
+        'status': 'success',
+        'model_directory': str(model_dir),
+        'model_files_count': len(model_files),
+        'message': 'Model files found'
+    }
 
