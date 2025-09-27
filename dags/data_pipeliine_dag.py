@@ -36,7 +36,7 @@ from airflow_tasks import validate_input_data, run_data_pipeline
 default_arguments = {
                     'owner' : 'Maneth',
                     'depends_on_past' : False,
-                    'start_date': timezone.datetime(2025, 9, 27, 10, 0),
+                    'start_date': timezone.datetime(2025, 9, 27, 7, 0),
                     'email_on_failuer': False,
                     'email_on_retry': False,
                     'retries': 0,
