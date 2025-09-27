@@ -28,10 +28,10 @@ from airflow import DAG
 from airflow.utils import timezone
 from datetime import datetime, timedelta
 from airflow.operators.python import PythonOperator
-from airflow_tasks import validate_data_pipeline_outputs, run_training_pipeline
+from airflow_tasks import validate_trained_model, run_inference_pipeline
 
 
-# DAG ===> Validate data pipline outputs data ----> Run train pipeline
+# DAG ===> Validate train model ----> Run inference pipeline
 
 default_arguments = {
                     'owner' : 'Maneth',
@@ -43,30 +43,30 @@ default_arguments = {
                     }
 
 with DAG(dag_id = 'train_pipeline_dag',
-        schedule_interval='30 19 * * *',  #evry 1 AM
+        schedule_interval='* * * * *',  #evry minute
         catchup=False,
         max_active_runs=1,
         default_args = default_arguments,
-        description='train Pipeline - Every 1 AM Sheduled',
+        description='Inference Pipeline - Every 1 minute',
         tags=['pyspark', 'mllib', 'mlflow', 'batch-processing']
 
         ) as dag:
     
     # Step 1
-    validate_data_pipeline_outputs_task = PythonOperator(
-                                            task_id='validate_data_pipeline_outputs',
-                                            python_callable=validate_data_pipeline_outputs,
+    validate_trained_model_task = PythonOperator(
+                                            task_id='validate_trained_model',
+                                            python_callable=validate_trained_model,
                                             execution_timeout=timedelta(minutes=2)
                                             )
     
     # Step 2
-    run_training_pipeline_task = PythonOperator(
-                                            task_id='run_training_pipeline',
-                                            python_callable=run_training_pipeline,
-                                            execution_timeout=timedelta(minutes=30)
+    run_inference_pipeline_task = PythonOperator(
+                                            task_id='run_inference_pipeline',
+                                            python_callable=run_inference_pipeline,
+                                            execution_timeout=timedelta(minutes=2)
                                             )
 
 
-    validate_data_pipeline_outputs_task >> run_training_pipeline_task
+    validate_trained_model_task >> run_inference_pipeline_task
 
 
