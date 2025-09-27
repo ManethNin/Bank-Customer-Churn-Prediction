@@ -3,6 +3,7 @@
 .venv/
 .vscode/
 .idea/
+.airflow/
 *.swp
 *.swo
 
