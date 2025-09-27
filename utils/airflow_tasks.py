@@ -215,3 +215,264 @@ def setup_project_environment() -> str:
     return str(project_root)
 
 
+def run_data_pipeline(
+                    data_path: str = 'data/raw/ChurnModelling.csv',
+                    force_rebuild: bool = False,
+                    output_format: str = 'both'
+                    ) -> Dict[str, Any]:
+    """
+    Professional wrapper for data pipeline execution.
+    
+    Args:
+        data_path: Path to input data file
+        force_rebuild: Whether to force rebuild of existing artifacts
+        output_format: Output format ('csv', 'parquet', or 'both')
+    
+    Returns:
+        Dict containing pipeline execution results
+    """
+    project_root = setup_project_environment()
+    
+    try:
+        # Change to project directory
+        os.chdir(project_root)
+        
+        # Import and execute pipeline
+        from data_pipeline import data_pipeline
+        
+        logger.info(f"Starting data pipeline: {data_path}")
+        
+        result = data_pipeline(
+                            data_path=data_path,
+                            force_rebuild=force_rebuild,
+                            output_format=output_format
+                            )
+        
+        logger.info("✓ Data pipeline completed successfully")
+        
+        # Return serializable summary instead of raw numpy arrays
+        return {
+            'status': 'success',
+            'X_train_shape': result['X_train'].shape if 'X_train' in result else None,
+            'X_test_shape': result['X_test'].shape if 'X_test' in result else None,
+            'Y_train_shape': result['Y_train'].shape if 'Y_train' in result else None,
+            'Y_test_shape': result['Y_test'].shape if 'Y_test' in result else None,
+            'message': 'Data pipeline completed successfully'
+        }
+        
+    except Exception as e:
+        logger.error(f"✗ Data pipeline failed: {str(e)}")
+        raise
+
+
+def run_training_pipeline(
+    data_path: str = 'data/raw/ChurnModelling.csv',
+    model_params: Optional[Dict[str, Any]] = None,
+    test_size: float = 0.2,
+    random_state: int = 42,
+    model_path: str = 'artifacts/models/airflow_spark_random_forest_model',
+    data_format: str = 'csv',
+    training_engine: str = 'pyspark'
+) -> Dict[str, Any]:
+    """
+    Professional wrapper for training pipeline execution.
+    
+    Args:
+        data_path: Path to input data file
+        model_params: Model hyperparameters
+        test_size: Test set size ratio
+        random_state: Random seed for reproducibility
+        model_path: Path to save trained model
+        data_format: Input data format
+        training_engine: Training engine ('pyspark' or 'sklearn')
+    
+    Returns:
+        Dict containing training results and metrics
+    """
+    project_root = setup_project_environment()
+    
+    try:
+        # Change to project directory
+        os.chdir(project_root)
+        
+        # Set default model parameters
+        if model_params is None:
+            model_params = {
+                'numTrees': 100,
+                'maxDepth': 10,
+                'seed': 42
+            }
+        
+        # Import and execute pipeline
+        from training_pipeline import training_pipeline
+        
+        logger.info(f"Starting training pipeline: {training_engine}")
+        
+        result = training_pipeline(
+            data_path=data_path,
+            model_params=model_params,
+            test_size=test_size,
+            random_state=random_state,
+            model_path=model_path,
+            data_format=data_format,
+            training_engine=training_engine
+        )
+        
+        logger.info("✓ Training pipeline completed successfully")
+        
+        # Return serializable summary
+        return {
+            'status': 'success',
+            'model_path': model_path,
+            'training_engine': training_engine,
+            'metrics': result if isinstance(result, dict) else {'message': str(result)},
+            'message': 'Training pipeline completed successfully'
+        }
+        
+    except Exception as e:
+        logger.error(f"✗ Training pipeline failed: {str(e)}")
+        raise
+
+
+def run_inference_pipeline(
+    model_path: Optional[str] = None,
+    encoders_path: str = 'artifacts/encode',
+    sample_data: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """
+    Professional wrapper for inference pipeline execution.
+    
+    Args:
+        model_path: Path to trained model (auto-detected if None)
+        encoders_path: Path to feature encoders
+        sample_data: Sample data for inference (uses default if None)
+    
+    Returns:
+        Dict containing inference results
+    """
+    project_root = setup_project_environment()
+    
+    try:
+        # Change to project directory
+        os.chdir(project_root)
+        
+        # Auto-detect model path if not provided
+        if model_path is None:
+            candidate_paths = [
+                'artifacts/models/airflow_spark_random_forest_model',
+                'artifacts/models/spark_random_forest_model'
+            ]
+            
+            for path in candidate_paths:
+                if os.path.exists(path):
+                    model_path = path
+                    break
+            
+            if model_path is None:
+                raise FileNotFoundError(f"No model found in: {candidate_paths}")
+        
+        # Use default sample data if not provided
+        if sample_data is None:
+            sample_data = {
+                        'CreditScore': 650,
+                        'Geography': 'Spain',
+                        'Gender': 'Male',
+                        'Age': 35,
+                        'Tenure': 5,
+                        'Balance': 50000.0,
+                        'NumOfProducts': 2,
+                        'HasCrCard': 1,
+                        'IsActiveMember': 1,
+                        'EstimatedSalary': 60000.0
+                        }
+        
+        # Import and execute pipeline
+        from streaming_inference_pipeline import initialize_inference_system, streaming_inference
+        
+        logger.info(f"Starting inference pipeline: {model_path}")
+        
+        # Initialize inference system
+        inference = initialize_inference_system(
+            model_path=model_path,
+            encoders_path=encoders_path
+        )
+        
+        # Run inference
+        result = streaming_inference(inference, sample_data)
+        
+        logger.info("✓ Inference pipeline completed successfully")
+        
+        # Return serializable summary
+        return {
+            'status': 'success',
+            'model_path': model_path,
+            'prediction': result if isinstance(result, dict) else {'message': str(result)},
+            'sample_data': sample_data,
+            'message': 'Inference pipeline completed successfully'
+        }
+        
+    except Exception as e:
+        logger.error(f"✗ Inference pipeline failed: {str(e)}")
+        raise
+
+
+def validate_data_pipeline_outputs(project_root: str) -> bool:
+    """
+    Validate data pipeline outputs.
+    
+    Args:
+        project_root: Project root directory path
+    
+    Returns:
+        bool: True if validation passes
+    """
+    expected_files = [
+        'artifacts/data/X_train.csv',
+        'artifacts/data/X_test.csv', 
+        'artifacts/data/Y_train.csv',
+        'artifacts/data/Y_test.csv',
+        'artifacts/data/X_train.parquet',
+        'artifacts/data/X_test.parquet',
+        'artifacts/data/Y_train.parquet', 
+        'artifacts/data/Y_test.parquet'
+    ]
+    
+    missing_files = []
+    for file_path in expected_files:
+        full_path = os.path.join(project_root, file_path)
+        if not os.path.exists(full_path):
+            missing_files.append(file_path)
+    
+    if missing_files:
+        logger.error(f"✗ Missing output files: {missing_files}")
+        raise FileNotFoundError(f"Missing output files: {missing_files}")
+    
+    logger.info("✓ All expected output files found")
+    return True
+
+
+def validate_training_pipeline_outputs(
+    project_root: str, 
+    training_engine: str = 'pyspark'
+) -> bool:
+    """
+    Validate training pipeline outputs.
+    
+    Args:
+        project_root: Project root directory path
+        training_engine: Training engine used
+    
+    Returns:
+        bool: True if validation passes
+    """
+    if training_engine == 'pyspark':
+        model_path = 'artifacts/models/airflow_spark_random_forest_model'
+    else:
+        model_path = 'artifacts/models/airflow_sklearn_model.joblib'
+    
+    full_model_path = os.path.join(project_root, model_path)
+    if not os.path.exists(full_model_path):
+        raise FileNotFoundError(f"Trained model not found: {model_path}")
+    
+    logger.info(f"✓ Training output validation completed - Model found: {model_path}")
+    return True
